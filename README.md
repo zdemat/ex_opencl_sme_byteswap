@@ -22,5 +22,5 @@ CL_CONTEXT_EMULATOR_DEVICE_INTELFPGA=1 PYOPENCL_CTX='0' python ./host/host.py
 
 
 ```bash
-make hw
+nohup make hw &
 ```
