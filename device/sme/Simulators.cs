@@ -11,25 +11,20 @@ namespace ByteSwap
 	/// </summary>
 	public class ValueSimulator : SimulationProcess
 	{
-		/// <summary>
-		/// The value bus
-		/// </summary>
 		[OutputBus]
-		public readonly ValueBus Data = Scope.CreateBus<ValueBus>();
+		private readonly ILiteAvalonInput m_control;
+		[OutputBus]
+		private readonly ILiteAvalonOutput m_result;
+		private readonly uint[] m_values;
+		public ValueSimulator(ByteSwapProc proc, uint[] values)
+		{
+			if (proc == null)
+				throw new ArgumentNullException(nameof(proc));
 
-        	/// <summary>
-        	/// The value to process
-        	/// </summary>
-        	private readonly uint[] VALUES;
-
-        	/// <summary>
-        	/// Initializes a new instance of the <see cref="T:ByteSwap.ValueSimulator"/> class.
-        	/// </summary>
-        	/// <param name="values">The values to process.</param>
-        	public ValueSimulator(params uint[] values)
-        	{
-            		VALUES = values;
-        	}
+			m_control = proc.Input;
+			m_result = proc.Output;
+			m_values = values ?? throw new ArgumentNullException(nameof(values));
+		}
 
 		/// <summary>
 		/// Run this instance.
@@ -40,21 +35,23 @@ namespace ByteSwap
 			await ClockAsync();
 
 			// Run through all values
-			foreach (var val in VALUES)
+			foreach (var val in m_values)
 			{
 				// We are now transmitting data
-				Data.IsValid = true;
-				Data.Value = val;
+				m_control.InputValid = true;
+				m_control.Value = val;
+				// We can read data
+				m_control.InputReady = true;
+
+				Console.WriteLine($"Wrote {val} to swapper");
 			
 				await ClockAsync();
 			
-				// Write progress
-				Console.WriteLine($"value={1} written", val);
+				Console.WriteLine($"Got result: {m_result.Value}");
 			}
 
 			// We are now done with the values, so signal that
-			Data.IsValid = false;
-			Data.IsReady = true;
+			m_control.InputValid = false;
 			
 			// Make sure the last state has propagated
 			await ClockAsync();

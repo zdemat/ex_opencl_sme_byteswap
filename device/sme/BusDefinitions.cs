@@ -3,27 +3,46 @@ using SME;
 namespace ByteSwap
 {
 	/// <summary>
-	/// A bus for swapping lower and higher part of word
+	/// Output for a lite avalon interface
 	/// </summary>
-	public interface ValueBus : IBus
+	public interface ILiteAvalonOutput : IBus
 	{
-        // The [InitialValue] attribute makes sure we can read the value without writing.
-		// It is also possible to set [InitializedBus] to force all fields to be initialized
-		
-		/// <summary>
-		/// A value indicating the current stored value is valid
-		/// </summary>
-		[InitialValue]
-		bool IsValid { get; set; }
 
 		/// <summary>
-		/// A value indicating a new value can be stored
+		/// A value that signals that the receiver can accept data
 		/// </summary>
 		[InitialValue]
-		bool IsReady { get; set; }
+		bool OutputReady { get; set; } 
+
+        /// <summary>
+        /// A value that signals that the value is set
+        /// </summary>
+		[InitialValue]
+		bool OutputValid { get; set; }
 
 		/// <summary>
-		/// The word value
+		/// The value being reported by this module
+		/// </summary>
+		uint Value { get; set; }
+	}
+
+	public interface ILiteAvalonInput : IBus
+	{
+		/// <summary>
+		/// A signal that is set when value can be consumed
+		/// </summary>
+		[InitialValue]
+		bool InputReady { get; set; }		
+
+		/// <summary>
+		/// A signal that is set when the value can be read
+		/// </summary>
+		/// <value></value>
+		[InitialValue]
+		bool InputValid { get; set; }
+
+		/// <summary>
+		/// The value to read
 		/// </summary>
 		uint Value { get; set; }
 	}
