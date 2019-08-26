@@ -20,8 +20,24 @@ namespace ByteSwap
 		[OutputBus]
 		public readonly ILiteAvalonOutput Output = Scope.CreateBus<ILiteAvalonOutput>();
 
-		private uint m_value;
-		private bool m_value_ready = false;
+		/// <summary>
+		/// The different states the protocol can be in
+		/// </summary>
+		private enum ControlStates
+		{
+			/// <summary>The protocol is waiting for input</summary>
+			Start,
+            /// <summary>The protocol is blocked by the downstream not accepting input</summary>
+            Stall,
+            /// <summary>The protocol is forwarding data</summary>
+            Forward
+		}
+
+		/// <summary>
+		/// The current state of the process
+		/// </summary>
+		private ControlStates m_state = ControlStates.Start;
+
 
 		/// <summary>
 		/// The method invoked when all inputs are ready.
@@ -29,39 +45,66 @@ namespace ByteSwap
 		/// </summary>
 		protected override void OnTick()
 		{
-			// Check if we are waiting to send a value
-			if (m_value_ready)
+			switch (m_state)
 			{
-				// If we are waiting, keep waiting until we have sent it
-				if (Input.InputReady)
-				{
-					// The output has been consumed
-					Output.OutputValid = false;
-					
-					// We can read again
-					m_value_ready = false;
-					Output.OutputReady = true;
-				}
+				// In this state we keep sending the input to the output
+				case ControlStates.Forward:
+
+					// Check if the upstream is delivering more data
+					if (Input.InputValid)
+					{
+						// Forward the data
+						Output.Value = Input.Value << 16 | Input.Value >> 16;
+						Output.OutputValid = true;
+
+                        // If downstream accepts it, continue forwarding
+                        Output.OutputReady = Input.InputReady;
+
+                        // If downstream is stalling, stop the forwarding
+                        if (!Input.InputReady)
+							m_state = ControlStates.Start;
+					}
+					else
+					{
+						// No more data from upstream
+						Output.OutputValid = false;
+						Output.OutputReady = true;
+						m_state = ControlStates.Start;
+					}
+					break;
+
+				// In this state, the downstream module has stalled
+				case ControlStates.Stall:
+					// Wait for the downstream module to activate
+					if (Input.InputReady)
+						m_state = ControlStates.Forward;
+					break;
+
+				//case ControlStates.Start:
+				default:
+					// Wait for input to arrive
+					if (Input.InputValid)
+					{
+						// Forward the output (will be latched
+                        Output.Value = Input.Value << 16 | Input.Value >> 16;
+                        Output.OutputValid = true;
+
+						if (Input.InputReady)
+						{
+                            // If downstream can read, start forwarding mode
+                            Output.OutputReady = true;
+							m_state = ControlStates.Forward;
+						}
+						else
+						{
+                            // If downstream is blocking, enter stall mode
+                            Output.OutputReady = false;
+                            m_state = ControlStates.Stall;
+                        }
+					}
+
+					break;
 			}
-			else
-			{
-				// Keep waiting until we get a value
-				if (Input.InputValid)
-				{
-					// Output the value
-					Output.Value = Input.Value << 16 | Input.Value >> 16;
-					// Signal that it can be read
-					Output.OutputValid = true;
-
-					// See if we need to block in next cycle
-					m_value_ready = !Input.InputReady;
-					// We can read again, if this value is consumed
-					Output.OutputReady = Input.InputReady;
-				}
-
-			}
-
-			// If we sent the value and a new value is ready, consume it immediately
 		}
 	}
 }
