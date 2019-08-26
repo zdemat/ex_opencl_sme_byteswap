@@ -11,6 +11,7 @@ sme-target: device/sme/BusDefinitions.cs device/sme/ByteSwap.csproj device/sme/P
 	cp device/sme/output/vhdl/Export_ByteSwap.vhdl device/lib_sme/vhd/Export_ByteSwap.vhd
 	cp device/sme/output/vhdl/system_types.vhdl device/lib_sme/vhd/system_types.vhd
 	cp device/sme/output/vhdl/Types_ByteSwap.vhdl device/lib_sme/vhd/Types_ByteSwap.vhd
+	sed -i "s/RST = '1'/RST = '0'/g" device/lib_sme/vhd/*.vhd 
 	sed -i "s/RST/resetn/g" device/lib_sme/vhd/*.vhd
 	sed -i "s/CLK/clock/g" device/lib_sme/vhd/*.vhd 
 
