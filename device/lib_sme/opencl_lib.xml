@@ -7,14 +7,14 @@
            properly handle incoming stalls (because it simply ignores its stall/valid inputs). If set
            to "no", the function must properly handle stall/valid signals. 
            IS_STALL_FREE="yes" requires IS_FIXED_LATENCY="yes". -->
-      <IS_STALL_FREE value="yes"/>
+      <IS_STALL_FREE value="no"/>
       
       <!-- If the function always takes known number of clock cycles (specified by EXPECTED_LATENCY)
            to compute its output, set IS_FIXED_LATENCY to "yes".
            Note that IS_FIXED_LATENCY could be "yes" while IS_STALL_FREE="no". Such a function would
            produce its output in fixed number of cycles but could still deal with stall signals 
            properly.  -->
-      <IS_FIXED_LATENCY value="yes"/>
+      <IS_FIXED_LATENCY value="no"/>
       
       <!-- Expected latency of this function. If IS_FIXED_LATENCY="yes", this is the number of 
            pipeline stages inside the function. In this case, EXPECTED_LATENCY must be set exactly
@@ -36,22 +36,22 @@
            to such functions.
            Functions that have internal state or talk to external memories are examples of functions
            with side-effects. -->
-      <HAS_SIDE_EFFECTS value="no"/>
+      <HAS_SIDE_EFFECTS value="yes"/>
             
       <!-- Set to "yes" to allow multiple instances of this function to be merged by the compiler.
            This property should be set to "yes". 
            Note that marking function with HAS_SIDE_EFFECTS does not prevent merging. -->
-      <ALLOW_MERGING value="yes"/>
+      <ALLOW_MERGING value="no"/>
     </ATTRIBUTES>
     <INTERFACE>
       <AVALON port="clock" type="clock"/>
       <AVALON port="resetn" type="resetn"/>
-      <AVALON port="ValueBus_0_IsValid" type="ivalid"/>
-      <AVALON port="ValueBus_0_IsReady" type="iready"/>
-      <AVALON port="ValueBus_1_IsValid" type="ovalid"/>
-      <AVALON port="ValueBus_1_IsReady" type="oready"/>
-      <INPUT  port="ValueBus_0_Value" width="32"/>
-      <OUTPUT port="ValueBus_1_Value" width="32"/>
+      <AVALON port="ILiteAvalonInput_InputValid" type="ivalid"/>
+      <AVALON port="ILiteAvalonInput_InputReady" type="iready"/>
+      <AVALON port="ILiteAvalonOutput_OutputValid" type="ovalid"/>
+      <AVALON port="ILiteAvalonOutput_OutputReady" type="oready"/>
+      <INPUT  port="ILiteAvalonInput_Value" width="32"/>
+      <OUTPUT port="ILiteAvalonOutput_Value" width="32"/>
     </INTERFACE>
     <C_MODEL>
       <FILE name="c_model.cl" />
@@ -65,4 +65,3 @@
     </REQUIREMENTS>
   </FUNCTION>
 </RTL_SPEC>
-
