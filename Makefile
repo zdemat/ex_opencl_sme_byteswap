@@ -13,7 +13,8 @@ sme-target: device/sme/BusDefinitions.cs device/sme/ByteSwap.csproj device/sme/P
 	cp device/sme/output/vhdl/Types_ByteSwap.vhdl device/lib_sme/vhd/Types_ByteSwap.vhd
 	sed -i "s/RST = '1'/RST = '0'/g" device/lib_sme/vhd/*.vhd 
 	sed -i "s/RST/resetn/g" device/lib_sme/vhd/*.vhd
-	sed -i "s/CLK/clock/g" device/lib_sme/vhd/*.vhd 
+	sed -i "s/CLK/clock/g" device/lib_sme/vhd/*.vhd
+	sed -i "s/ENB => ENB/ENB => '1'/g" device/lib_sme/vhd/Export_*.vhd
 
 lib-target:
 	make dir-target
