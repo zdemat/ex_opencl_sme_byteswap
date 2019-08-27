@@ -28,9 +28,7 @@ namespace ByteSwap
             /// <summary>The protocol is waiting for input</summary>
             Start,
             /// <summary>The protocol is blocked by the downstream not accepting input</summary>
-            Stall,
-            /// <summary>The protocol is forwarding data</summary>
-            Forward
+            Stall
         }
 
         /// <summary>
@@ -47,60 +45,32 @@ namespace ByteSwap
         {
             switch (m_state)
             {
-                // In this state we keep sending the input to the output
-                case ControlStates.Forward:
-
-                    // Check if the upstream is delivering more data
-                    if (Input.InputValid)
-                    {
-                        // Forward the data
-                        Output.Value = Input.Value << 16 | Input.Value >> 16;
-                        Output.OutputValid = true;
-
-                        // If downstream accepts it, continue forwarding
-                        Output.OutputReady = Input.InputReady;
-
-                        // If downstream is stalling, stop the forwarding
-                        if (!Input.InputReady)
-                            m_state = ControlStates.Start;
-                    }
-                    else
-                    {
-                        // No more data from upstream
-                        Output.OutputValid = false;
-                        Output.OutputReady = true;
-                        m_state = ControlStates.Start;
-                    }
-                    break;
-
                 // In this state, the downstream module has stalled
                 case ControlStates.Stall:
                     // Wait for the downstream module to activate
                     if (Input.InputReady)
-                        m_state = ControlStates.Forward;
+                    {
+                        Output.OutputValid = false;
+                        Output.OutputReady = true;
+                        m_state = ControlStates.Start;
+                    }
+
                     break;
 
                 //case ControlStates.Start:
                 default:
+                    Output.OutputValid = Input.InputValid;
+
                     // Wait for input to arrive
                     if (Input.InputValid)
                     {
                         // Forward the output (will be latched
                         Output.Value = Input.Value << 16 | Input.Value >> 16;
-                        Output.OutputValid = true;
+                        Output.OutputReady = Input.InputReady;
 
-                        if (Input.InputReady)
-                        {
-                            // If downstream can read, start forwarding mode
-                            Output.OutputReady = true;
-                            m_state = ControlStates.Forward;
-                        }
-                        else
-                        {
-                            // If downstream is blocking, enter stall mode
-                            Output.OutputReady = false;
+                        // If downstream can read, start forwarding mode
+                        if (!Input.InputReady)
                             m_state = ControlStates.Stall;
-                        }
                     }
 
                     break;
