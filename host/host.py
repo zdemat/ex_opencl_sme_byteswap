@@ -20,8 +20,8 @@ queue = cl.CommandQueue(ctx)
 
 mf = cl.mem_flags
 
-n = 2
 x = np.asarray([1, 1<<16])
+n = len(x)
 
 x_c = np_aligned_empty((n,), np.uint32, 64); x_c[()] = x[()]
 y_c = np_aligned_empty((n,), np.uint32, 64); y_c[()] = 0
