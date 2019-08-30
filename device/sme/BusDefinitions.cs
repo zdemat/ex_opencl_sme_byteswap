@@ -11,7 +11,7 @@ namespace ByteSwap
         /// <summary>
         /// A value that signals that the receiver can accept data
         /// </summary>
-        [InitialValue(true)]
+        [InitialValue]
         bool OutputReady { get; set; } 
 
         /// <summary>

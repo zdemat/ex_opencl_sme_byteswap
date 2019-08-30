@@ -1,4 +1,3 @@
-using System;
 using SME;
 
 namespace ByteSwap
@@ -25,17 +24,29 @@ namespace ByteSwap
         /// </summary>
         private enum ControlStates
         {
-            /// <summary>The protocol is waiting for input</summary>
-            Start,
-            /// <summary>The protocol is blocked by the downstream not accepting input</summary>
-            Stall
+            /// <summary>Transaction has completed</summary>
+            Init,
+            /// <summary>Waiting for input</summary>
+            WaitRead,
+            ///	<summary>Performing computations</summary>
+            Compute,
+            ///	<summary>Waiting for output</summary>
+            WaitWrite
         }
 
         /// <summary>
         /// The current state of the process
         /// </summary>
-        private ControlStates m_state = ControlStates.Start;
+        private ControlStates m_state = ControlStates.Init;
 
+        /// <summary>
+        /// The captured input value
+        /// </summary>
+        private uint m_read_value;
+        /// <summary>
+        /// The value to be reported as output
+        /// </summary>
+        private uint m_write_value;
 
         /// <summary>
         /// The method invoked when all inputs are ready.
@@ -45,36 +56,48 @@ namespace ByteSwap
         {
             switch (m_state)
             {
-                // In this state, the downstream module has stalled
-                case ControlStates.Stall:
-                    // Wait for the downstream module to activate
+                case ControlStates.WaitWrite:
+                    Output.OutputValid = true;
+                    Output.OutputReady = false;
+
+                    // Wait for output to be consumed
                     if (Input.InputReady)
                     {
                         Output.OutputValid = false;
-                        Output.OutputReady = true;
-                        m_state = ControlStates.Start;
+                        m_state = ControlStates.Init;
                     }
+                    break;
+
+                case ControlStates.Compute:
+                    m_write_value = m_read_value << 16 | m_read_value >> 16;
+                    Output.OutputValid = true;
+                    Output.OutputReady = false;
+                    m_state = ControlStates.WaitWrite;
 
                     break;
 
-                //case ControlStates.Start:
-                default:
-                    Output.OutputValid = Input.InputValid;
+                case ControlStates.WaitRead:
+                    Output.OutputValid = false;
+                    Output.OutputReady = true;
 
                     // Wait for input to arrive
                     if (Input.InputValid)
                     {
-                        // Forward the output (will be latched
-                        Output.Value = Input.Value << 16 | Input.Value >> 16;
-                        Output.OutputReady = Input.InputReady;
-
-                        // If downstream can read, start forwarding mode
-                        if (!Input.InputReady)
-                            m_state = ControlStates.Stall;
+                        m_read_value = Input.Value;
+                        Output.OutputReady = false;
+                        m_state = ControlStates.Compute;
                     }
+                    break;
 
+                case ControlStates.Init:
+                default:
+                    Output.OutputValid = false;
+                    Output.OutputReady = true;
+                    m_state = ControlStates.WaitRead;
                     break;
             }
+
+            Output.Value = m_write_value;
         }
     }
 }
