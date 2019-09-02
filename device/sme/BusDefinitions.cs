@@ -7,7 +7,6 @@ namespace ByteSwap
     /// </summary>
     public interface ILiteAvalonOutput : IBus
     {
-
         /// <summary>
         /// A value that signals that the receiver can accept data
         /// </summary>
